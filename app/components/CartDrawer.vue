@@ -13,6 +13,10 @@ const currentUser = useCurrentUser()
     </div>
     <v-divider />
 
+    <v-alert v-if="cart.notice" type="info" density="compact" closable class="ma-4 mb-0" @click:close="cart.notice = null">
+      {{ cart.notice }}
+    </v-alert>
+
     <div v-if="!cart.items.length" class="pa-8 text-center text-medium-emphasis">
       購物車是空的
     </div>

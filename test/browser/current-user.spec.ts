@@ -8,7 +8,8 @@ test.describe('目前使用者狀態（SSR 與瀏覽器端）', () => {
     await page.getByRole('button', { name: '登入' }).click()
 
     await expect(page.getByRole('heading', { name: '歡迎回來，Amy Chen！' })).toBeVisible()
-    await expect(page.getByText('外送至：台北市信義區松仁路 100 號 12 樓')).toBeVisible()
+    // 限定在首頁歡迎區塊：購物車抽屜有商品時也會顯示「外送至」
+    await expect(page.locator('.hero').getByText('外送至：台北市信義區松仁路 100 號 12 樓')).toBeVisible()
 
     await page.reload() // 重新整理走 SSR，仍然是 Amy
     await expect(page.getByRole('heading', { name: '歡迎回來，Amy Chen！' })).toBeVisible()
