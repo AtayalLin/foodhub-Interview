@@ -38,6 +38,23 @@ describe('GET /api/products 搜尋', () => {
     expect(status).toBe(200)
     expect(data).toEqual([])
   })
+
+  it('% 被當成一般文字，不會變成「列出全部」的萬用字元', async () => {
+    const { data } = await app.request(`/api/products?q=${encodeURIComponent('%')}`)
+    expect(data).toEqual([])
+  })
+
+  it('一般搜尋與分類篩選仍然正常（修正沒有破壞原功能）', async () => {
+    const { data: curry } = await app.request(`/api/products?q=${encodeURIComponent('咖哩')}`)
+    expect(curry.map((p: { name: string }) => p.name)).toEqual(['奶油雞咖哩', '馬薩拉羊肉咖哩', '菠菜起司咖哩'])
+
+    const { data: drinks } = await app.request('/api/products?category=Drinks')
+    expect(drinks).toHaveLength(5) // 可樂、香草奶昔、綠茶、芒果拉西、冷壓果汁
+    expect(drinks.every((p: { category: string }) => p.category === 'Drinks')).toBe(true)
+
+    const { data: all } = await app.request('/api/products')
+    expect(all).toHaveLength(23)
+  })
 })
 
 describe('GET /api/orders/:id 權限', () => {
