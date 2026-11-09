@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
 // 瀏覽器測試（前端 / SSR / hydration）。API 與後端測試在 test/e2e、test/unit，由 Vitest 執行。
-const PORT = 3100
+// UI 模式開著時會佔用此 port；要同時在終端機執行可用 PW_PORT 指定其他 port
+const PORT = Number(process.env.PW_PORT) || 3100
 
 export default defineConfig({
   testDir: './test/browser',
