@@ -22,6 +22,7 @@ docker compose up --build   # 需先 cp .env.example .env
 - 測試會先 build 正式版，再用**暫存 SQLite** 啟動 server，不會動到 `.data/foodhub.db`。
 - 只改測試時加 `TEST_SKIP_BUILD=1` / `PW_SKIP_BUILD=1`；UI 模式開著時用 `PW_PORT=3101`。
 - Windows：執行 Playwright 時**不要把輸出 pipe 給 `head`**，提前關閉輸出會讓 Playwright 中斷，留下佔用 port 3100 的 server。請把輸出導到檔案再 grep。
+- Windows：repo 一律使用 LF。用腳本（例如 Python）改寫檔案時要以二進位或 `newline='\n'` 寫入，否則會變成 CRLF，整份檔案在 diff 裡都會顯示為修改。用 `git ls-files --eol` 確認。
 
 ## 工作方式
 
