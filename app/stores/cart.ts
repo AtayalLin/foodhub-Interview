@@ -1,8 +1,10 @@
 export const useCartStore = defineStore('cart', {
   state: () => ({
-    items: (typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem('cart') ?? '[]')
-      : []) as CartItem[],
+    // 一律從空的開始，localStorage 改由 restore() 在 hydration 完成後讀入（見 plugins/cart.client.ts）。
+    // 原本在這裡直接讀 localStorage：但頁面若在 SSR 時用到購物車（例如菜單頁的 ProductCard），
+    // server 端的空購物車會隨 payload 送到瀏覽器，Pinia 沿用該狀態、不再執行這段，
+    // 重新整理後購物車變成 0，下一次 save() 還會把空內容寫回 localStorage → 訪客購物車永久遺失。
+    items: [] as CartItem[],
     drawer: false,
   }),
 
@@ -55,6 +57,11 @@ export const useCartStore = defineStore('cart', {
         if (item) item.unitPrice = unitPrice
       }
       this.save()
+    },
+
+    /** 從 localStorage 讀回購物車（只在瀏覽器、hydration 完成後呼叫；只讀不寫，不觸發 save） */
+    restore() {
+      this.items = JSON.parse(localStorage.getItem('cart') ?? '[]')
     },
 
     async loadFromServer() {
