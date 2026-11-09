@@ -18,9 +18,11 @@ const sortOptions = [
 const allCategories = computed(() => [...new Set(menuStore.products.map(p => p.category))])
 
 const filtered = computed(() => {
+  // sort() 會直接改動原陣列（也就是 store 裡的商品清單），原本的 id 順序會被永久覆蓋，
+  // 切回「預設排序」就回不去。先複製一份再排序。
   let list = menuStore.products
-  if (sort.value === 'price-asc') list = list.sort((a, b) => a.price - b.price)
-  if (sort.value === 'price-desc') list = list.sort((a, b) => b.price - a.price)
+  if (sort.value === 'price-asc') list = [...list].sort((a, b) => a.price - b.price)
+  if (sort.value === 'price-desc') list = [...list].sort((a, b) => b.price - a.price)
 
   return list.filter(p =>
     (!categories.value.length || categories.value.includes(p.category))
