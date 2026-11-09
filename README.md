@@ -43,6 +43,23 @@ docker compose up --build
 | amy@foodhub.test | password123 |
 | bob@foodhub.test | password123 |
 
+## 測試
+
+```bash
+npm test                          # Vitest：API、安全性、併發
+npx playwright install chromium   # 第一次執行瀏覽器測試前
+npm run test:browser              # Playwright：瀏覽器、SSR、hydration
+```
+
+測試會先 build 正式版，再以暫存資料庫啟動，不會影響 `.data/`。詳細說明見 `CODE_REVIEW.md` 的「測試」一節。
+
+## 文件
+
+- `CODE_REVIEW.md`：上線前審查的問題清單、修正與未修正的說明
+- `DESIGN.md`：登入後合併購物車的設計
+- `AI_USAGE.md`：AI 工具的使用方式
+- `AGENTS.md`：給 AI 開發工具的專案規則
+
 ## 專案結構
 
 ```
@@ -52,11 +69,16 @@ app/
   stores/           auth、cart、menu、order
   composables/
   middleware/
+  plugins/          vuetify、cart.client（hydration 後載入購物車）
 server/
   api/              REST API
   db/seed.ts        資料表與範例資料
-  utils/            db、auth
+  plugins/          啟動時檢查必要設定
+  utils/            db、auth、cart、order-rules、sanitize-intro
 shared/types/       前後端共用型別
+test/
+  e2e/  unit/       Vitest
+  browser/          Playwright
 ```
 
 ## 交接備註
