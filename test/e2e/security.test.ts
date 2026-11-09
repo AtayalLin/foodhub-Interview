@@ -25,6 +25,33 @@ describe('JWT secret', () => {
   })
 })
 
+describe('POST /api/auth/login', () => {
+  it('body 是空的回 400，而不是 500', async () => {
+    const res = await fetch(`${app.url}/api/auth/login`, { method: 'POST' })
+    expect(res.status).toBe(400)
+  })
+
+  it('透過 HTTPS（含反向代理的 X-Forwarded-Proto）登入時，cookie 帶 Secure', async () => {
+    const res = await fetch(`${app.url}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-forwarded-proto': 'https' },
+      body: JSON.stringify({ email: AMY.email, password: AMY.password }),
+    })
+    const cookie = res.headers.getSetCookie().find(c => c.startsWith('token='))!
+    expect(cookie).toMatch(/;\s*Secure/i)
+  })
+
+  it('本機 HTTP 開發時不帶 Secure，避免瀏覽器拒收 cookie 而無法登入', async () => {
+    const res = await fetch(`${app.url}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: AMY.email, password: AMY.password }),
+    })
+    const cookie = res.headers.getSetCookie().find(c => c.startsWith('token='))!
+    expect(cookie).not.toMatch(/;\s*Secure/i)
+  })
+})
+
 describe('GET /api/products 搜尋', () => {
   it('UNION 注入撈不到 users 資料表', async () => {
     const q = encodeURIComponent(`zzz%' UNION SELECT id,1,email,password_hash,'','',0,0,0,0 FROM users --`)
