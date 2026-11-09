@@ -333,6 +333,18 @@ npx playwright show-report  # 失敗時的截圖與 trace
 
 修正前的失敗紀錄：`c53391c`（API，15 個中 14 個失敗）、`583b533`（瀏覽器，6 個中 4 個失敗）。
 
-### 尚未完成的驗證
+### Docker 驗證
 
-- **`docker compose up --build` 尚未完整執行**：撰寫本文件時 Docker Desktop 沒有啟動。已確認未設定 `NUXT_JWT_SECRET` 時 compose 會報錯並提示設定方式；實際 build 與啟動待補驗。
+`docker compose up --build`（Docker Engine 29.9.2）已實際 build 並啟動，在容器內確認：
+
+| 項目 | 結果 |
+|---|---|
+| 未設定 `NUXT_JWT_SECRET` | compose 直接報錯並提示 `cp .env.example .env` |
+| 首頁 | 200 |
+| HTML 不含 JWT 密鑰（C1） | ✅ |
+| 登入 → `/api/me` | ✅ 回傳 Amy Chen |
+| 透過 `http://localhost` 登入的 cookie 不帶 Secure（L4，本機可正常登入） | ✅ |
+| SQL injection 撈不到帳號（C2） | ✅ |
+| 讀取別人的訂單回 404（C3） | ✅ |
+| 菜單頁 SSR 不含 `onerror`（H1） | ✅ |
+| 資料庫寫入 volume（`.data/foodhub.db`） | ✅ |
