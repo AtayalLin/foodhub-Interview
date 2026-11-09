@@ -22,7 +22,13 @@ npm run dev
 
 開啟 http://localhost:3000
 
-或使用 Docker：
+`npm run dev` 不需要額外設定。正式環境（`npm run build` 後執行，或 Docker）必須提供 `NUXT_JWT_SECRET`，未設定時 server 會拒絕啟動：
+
+```bash
+cp .env.example .env   # 並把 NUXT_JWT_SECRET 換成隨機長字串，例如 openssl rand -hex 32
+```
+
+或使用 Docker（會自動讀取 `.env`）：
 
 ```bash
 docker compose up --build

@@ -21,10 +21,10 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    public: {
-      // 放 public 才能在 server 和 client 都讀到
-      jwtSecret: 'foodhub-dev-secret-2024',
-    },
+    // 只在 server 端使用，絕不能放 public（public 會序列化進每一頁的 HTML）。
+    // 正式環境以環境變數 NUXT_JWT_SECRET 提供；未設定時 server 拒絕啟動（見 server/plugins/check-config.ts）。
+    // 開發模式給一組固定值，讓 `npm run dev` 不需額外設定。
+    jwtSecret: process.env.NODE_ENV === 'production' ? '' : 'dev-only-insecure-jwt-secret',
   },
 
   app: {

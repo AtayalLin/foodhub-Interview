@@ -8,7 +8,7 @@ export interface SessionUser {
 }
 
 function secretKey() {
-  return new TextEncoder().encode(useRuntimeConfig().public.jwtSecret)
+  return new TextEncoder().encode(useRuntimeConfig().jwtSecret)
 }
 
 export async function signToken(user: SessionUser) {

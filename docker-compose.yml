@@ -3,6 +3,9 @@ services:
     build: .
     ports:
       - "3000:3000"
+    environment:
+      # 從 .env 讀取（cp .env.example .env）；未設定時 compose 直接報錯，不會用預設值啟動
+      NUXT_JWT_SECRET: ${NUXT_JWT_SECRET:?請先設定 NUXT_JWT_SECRET（cp .env.example .env）}
     volumes:
       - foodhub-data:/app/.data
 
