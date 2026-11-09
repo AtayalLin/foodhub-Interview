@@ -138,6 +138,17 @@ describe('餐廳介紹 XSS', () => {
     expect(data.intro).toContain('北印度咖哩') // 正常內容保留
   })
 
+  it('餐廳列表 API 的介紹同樣已清理', async () => {
+    const { text } = await app.request('/api/restaurants')
+    expect(text).not.toMatch(/onerror/i)
+  })
+
+  it('其他餐廳的正常格式沒有被誤刪', async () => {
+    const { data } = await app.request('/api/restaurants/1')
+    expect(data.intro).toContain('<strong>手打牛肉漢堡</strong>')
+    expect(data.intro).toContain('<em>11:00–21:00</em>')
+  })
+
   it('SSR 輸出的菜單頁不含可執行的 payload', async () => {
     const { text } = await app.request('/restaurants/3/menu')
     expect(text).not.toMatch(/onerror/i)

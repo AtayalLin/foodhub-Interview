@@ -4,5 +4,6 @@ export default defineEventHandler((event) => {
   if (!restaurant) {
     throw createError({ statusCode: 404, statusMessage: '找不到餐廳' })
   }
-  return restaurant
+  // intro 是店家可編輯的 HTML，前端會用 v-html 顯示，輸出前以白名單清理（防 XSS）
+  return { ...restaurant, intro: sanitizeIntro(restaurant.intro) }
 })
