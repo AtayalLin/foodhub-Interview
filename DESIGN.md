@@ -170,9 +170,9 @@
 
 ---
 
-## 6. 改動範圍（預計）
+## 6. 改動範圍
 
-在既有架構內實作，不改 schema、不改頁面結構：
+在既有架構內實作，不改 schema、不改頁面結構。實際改動的檔案與實作前規劃的清單一致（`be831eb` server 端、`83022da` 前端）：
 
 | 檔案 | 改動 |
 |---|---|
@@ -181,13 +181,19 @@
 | `server/api/cart.get.ts` | 回傳前整理 |
 | `server/api/cart.put.ts` | 驗證格式、整理後寫入，回傳整理結果 |
 | `server/api/cart/merge.post.ts`（新增） | 合併 API |
-| `app/stores/cart.ts` | 已登入時以 server 為準；寫入依序送出；新增 `mergeGuestCart()` |
+| `app/stores/cart.ts` | 已登入時以 server 為準；寫入依序送出；新增 `syncAfterLogin()`（有訪客購物車就合併，否則載入帳號購物車）、`refreshFromServer()` |
 | `app/stores/auth.ts` | 登入時改呼叫合併（取代 TODO） |
 | `app/plugins/cart.client.ts` | 載入時依登入狀態決定讀 localStorage 或 server；切回分頁時重新取得 |
 | `app/components/CartDrawer.vue` | 顯示 `changes` 的提示（例如「部分商品數量已調整」） |
 
-## 7. 測試計畫
+## 7. 測試
 
-- **單元測試**：合併規則（聯集、訪客優先、排列順序、冪等）。
-- **API 測試**：題目情境（A/B/C + B/C/D）、重複呼叫結果相同、只影響自己的購物車、下架商品移除、數量上限、竄改價格無效、400 與 401。
-- **瀏覽器測試**：訪客加入商品 → 登入 → 看到合併結果；用另一個瀏覽器 context 模擬另一台裝置登入 → 看到同一份；合併後 localStorage 已清除；登出後畫面清空，再登入仍看得到。
+測試在實作前先寫好並確認失敗（`8c0acad`：merge API 不存在，且登入時帳號購物車直接覆蓋訪客購物車），實作後全部通過。
+
+| 檔案 | 內容 |
+|---|---|
+| `test/unit/cart-merge.test.ts` | 合併規則：聯集、訪客優先、排列順序、冪等、任一邊為空 |
+| `test/e2e/cart.test.ts` | 401 / 400、個別項目不合法只略過、題目情境（A/B/C + B/C/D）、重複呼叫結果相同、另一次登入（另一台裝置）看到同一份、只影響自己的購物車、竄改價格無效、數量上限（20 / 庫存）、下架商品移除、PUT 忽略前端單價、賣完的商品在 GET 時移除 |
+| `test/browser/cart-merge.spec.ts` | 訪客加入 → 登入 → 合併結果；合併後 localStorage 已清除；另一個瀏覽器 context（另一台裝置）登入看到同一份；登出畫面清空、再登入仍在；另一台裝置修改後切回分頁看到最新內容；合併時數量被調整會顯示提示 |
+
+執行方式：`npm test`（Vitest）、`npm run test:browser`（Playwright），詳見 `CODE_REVIEW.md` 的「測試」一節。
