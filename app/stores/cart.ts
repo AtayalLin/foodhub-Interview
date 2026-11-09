@@ -48,6 +48,15 @@ export const useCartStore = defineStore('cart', {
       this.save()
     },
 
+    /** 下單時 server 回報價格已更新：把購物車的單價換成目前售價，讓使用者看到新金額後再結帳 */
+    updatePrices(latest: { productId: number, unitPrice: number }[]) {
+      for (const { productId, unitPrice } of latest) {
+        const item = this.items.find(i => i.productId === productId)
+        if (item) item.unitPrice = unitPrice
+      }
+      this.save()
+    },
+
     async loadFromServer() {
       this.items = await $fetch<CartItem[]>('/api/cart')
       this.save()

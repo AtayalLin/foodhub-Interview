@@ -102,18 +102,31 @@ describe('POST /api/orders 信任邊界', () => {
     expect(order.phone).toBe('0912-345-678')
   })
 
-  it('價格與品名以 server 端商品資料為準，竄改的 unitPrice / total 無效', async () => {
+  it('竄改的 unitPrice / total → 409「價格已更新」且訂單不成立，並回傳目前售價', async () => {
     const amy = await app.login(AMY)
-    const { data } = await app.request('/api/orders', {
+    const res = await app.request('/api/orders', {
       method: 'POST',
       cookie: amy,
-      body: { userId: AMY.id, items: [{ productId: 1, name: '免費漢堡', qty: 2, unitPrice: 0.01 }], total: 0.02 },
+      body: { items: [{ productId: 1, name: '免費漢堡', qty: 2, unitPrice: 0.01 }], total: 0.02 },
     })
-    expect(data.orderId).toBeTypeOf('number')
+    expect(res.status).toBe(409)
+    expect(res.data.data.code).toBe('PRICE_CHANGED')
+    expect(res.data.data.items).toEqual([{ productId: 1, name: '經典起司堡套餐', unitPrice: 12.9 }])
+    expect(res.data.orderId).toBeUndefined()
+  })
+
+  it('用最新價格重新下單才成立；品名以 server 端資料為準', async () => {
+    const amy = await app.login(AMY)
+    const { status, data } = await app.request('/api/orders', {
+      method: 'POST',
+      cookie: amy,
+      body: { items: [{ productId: 1, name: '免費漢堡', qty: 2, unitPrice: 12.9 }], total: 25.8 },
+    })
+    expect(status).toBe(200)
 
     const { data: order } = await app.request(`/api/orders/${data.orderId}`, { cookie: amy })
-    expect(order.total).toBeCloseTo(25.8, 2)
-    expect(order.items[0].unit_price).toBeCloseTo(12.9, 2)
+    expect(order.total).toBe(25.8)
+    expect(order.items[0].unit_price).toBe(12.9)
     expect(order.items[0].name).toBe('經典起司堡套餐')
   })
 })

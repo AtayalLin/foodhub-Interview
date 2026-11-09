@@ -36,6 +36,7 @@ const currentUser = useCurrentUser()
         <div v-if="currentUser" class="text-caption text-medium-emphasis mb-2">
           外送至：{{ currentUser.address }}
         </div>
+        <v-alert v-if="order.error" type="warning" density="compact" class="mb-3">{{ order.error }}</v-alert>
         <div class="d-flex mb-3">
           <span>小計</span>
           <v-spacer />

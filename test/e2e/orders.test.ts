@@ -58,3 +58,22 @@ describe('下單失敗要如實回報且不留下半筆資料', () => {
     expect(res.data.ok).not.toBe(true)
   })
 })
+
+describe('下單規則', () => {
+  it('單一商品超過 20 份回 400', async () => {
+    const res = await order([{ ...BURGER, qty: 21 }])
+    expect(res.status).toBe(400)
+  })
+
+  it('同一商品在一張單裡重複出現回 400', async () => {
+    const res = await order([{ ...BURGER, qty: 1 }, { ...BURGER, qty: 2 }])
+    expect(res.status).toBe(400)
+  })
+
+  it('訂單總額四捨五入到小數 2 位，不留浮點誤差', async () => {
+    // 12.9 + 4.5 在 JS 會得到 17.400000000000002
+    const { data } = await order([{ ...BURGER, qty: 1 }, { productId: 6, name: '松露薯條', unitPrice: 4.5, qty: 1 }])
+    const { data: saved } = await app.request(`/api/orders/${data.orderId}`, { cookie: amy })
+    expect(saved.total).toBe(17.4)
+  })
+})
