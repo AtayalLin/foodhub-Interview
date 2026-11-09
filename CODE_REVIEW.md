@@ -337,11 +337,13 @@ npx playwright show-report  # 失敗時的截圖與 trace
 ### 型別檢查
 
 ```bash
-npx --package=vue-tsc --package=typescript vue-tsc -b --noEmit
+npx --package=vue-tsc --package=typescript vue-tsc -b --noEmit                    # app/、server/、shared/、nuxt.config
+npx --package=vue-tsc --package=typescript vue-tsc -p test/tsconfig.json --noEmit # test/
 ```
 
 - 最初檢查時回報的錯誤只有一種原因：專案沒有安裝 Node 的型別定義（`@types/node`），編輯器與型別檢查不認得 `node:sqlite`、`process`、`Buffer` 等。原始專案就有（`server/db/seed.ts:1`、`server/utils/password.ts:1,11`、`server/utils/db.ts:1`），修改後的 `db.ts`、`nuxt.config.ts` 與測試檔也受影響；執行時 Node 本來就提供這些模組，所以 build 與測試不受影響。
-- 原本判斷為開發環境設定、列為之後處理；考量現場面談需要螢幕分享，且題目指定的技術棧是 TypeScript，補上 devDependency `@types/node`（不改任何程式碼）。目前整個專案（含 `test/`）**0 個型別錯誤**。
+- 原本判斷為開發環境設定、列為之後處理；考量現場面談需要螢幕分享，且題目指定的技術棧是 TypeScript，補上 devDependency `@types/node`（不改任何程式碼）。
+- **更正**：補上 `@types/node` 後我一度記錄為「整個專案（含 `test/`）0 錯誤」，但 Nuxt 產生的 tsconfig 只涵蓋 `test/nuxt/`，`vue-tsc -b` 其實沒有檢查我們的測試檔，編輯器在測試檔仍有錯誤。新增 `test/tsconfig.json`（沿用 server 設定並加上 DOM 型別）後才真正涵蓋 `test/`；並以故意放入的型別錯誤確認測試檔確實有被檢查。目前兩個指令都是 **0 個型別錯誤**。
 
 ### Docker 驗證
 

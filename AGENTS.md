@@ -17,6 +17,10 @@ npm test                    # Vitest：API、安全、併發（test/e2e、test/u
 npm run test:browser        # Playwright：瀏覽器、SSR、hydration（test/browser）
 npx playwright test --ui    # UI 模式
 docker compose up --build   # 需先 cp .env.example .env
+
+# 型別檢查（不需安裝，npx 臨時執行）
+npx --package=vue-tsc --package=typescript vue-tsc -b --noEmit                    # app/、server/
+npx --package=vue-tsc --package=typescript vue-tsc -p test/tsconfig.json --noEmit # test/
 ```
 
 - 測試會先 build 正式版，再用**暫存 SQLite** 啟動 server，不會動到 `.data/foodhub.db`。

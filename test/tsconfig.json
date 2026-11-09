@@ -1,0 +1,15 @@
+{
+  // 測試檔不在 Nuxt 產生的任何 tsconfig 範圍內（Nuxt 只涵蓋 test/nuxt/），編輯器與型別檢查會不認得 Node 型別。
+  // 沿用 server 的設定：單元測試會 import server/utils/*，需要 Nitro 自動載入的型別。
+  "extends": "../.nuxt/tsconfig.server.json",
+  "compilerOptions": {
+    // Playwright 測試中 page.evaluate() 的程式在瀏覽器執行，會用到 localStorage、document
+    "lib": ["esnext", "dom", "dom.iterable"]
+  },
+  "include": [
+    "../.nuxt/types/nitro-nuxt.d.ts",
+    "../.nuxt/types/nitro.d.ts",
+    "../shared/**/*.d.ts",
+    "./**/*.ts"
+  ]
+}
