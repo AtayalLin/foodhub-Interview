@@ -76,17 +76,17 @@ test.describe('訪客購物車', () => {
 
 test.describe('結帳：價格已更新', () => {
   test('購物車價格與售價不同時，顯示提示、保留購物車並更新為目前售價', async ({ page }) => {
+    // 模擬「加入購物車之後商品調價」：讓載入的購物車帶著舊價格 $10（攔截 GET /api/cart）
+    await page.route('**/api/cart', (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      return route.fulfill({ json: [{ productId: 1, restaurantId: 1, name: '經典起司堡套餐', emoji: '🍔', unitPrice: 10, qty: 1 }] })
+    })
+
     await page.goto('/login')
     await page.getByLabel('Email').fill('amy@foodhub.test')
     await page.getByLabel('密碼').fill('password123')
     await page.getByRole('button', { name: '登入' }).click()
     await page.waitForURL('/')
-
-    // 模擬「加入購物車之後商品調價」：購物車裡存的是舊價格 $10
-    await page.evaluate(() => localStorage.setItem('cart', JSON.stringify([
-      { productId: 1, restaurantId: 1, name: '經典起司堡套餐', emoji: '🍔', unitPrice: 10, qty: 1 },
-    ])))
-    await page.reload()
 
     await page.getByRole('button', { name: '購物車' }).click()
     const drawer = page.locator('.v-navigation-drawer')
