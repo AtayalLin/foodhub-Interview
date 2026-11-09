@@ -59,7 +59,7 @@ export const useCartStore = defineStore('cart', {
       if (auth.user) {
         $fetch('/api/cart', {
           method: 'PUT',
-          body: { userId: auth.user.id, items: this.items },
+          body: { items: this.items }, // 身分由 server 從 cookie 判斷，不需（也不應）由前端傳 userId
         })
       }
     },

@@ -1,5 +1,4 @@
 interface OrderBody {
-  userId: number
   items: { productId: number, name: string, qty: number, unitPrice: number }[]
   total: number
 }
@@ -32,11 +31,12 @@ export default defineEventHandler(async (event) => {
 
   try {
     const db = useDb()
-    const user = db.prepare('SELECT address, phone FROM users WHERE id = ?').get(body.userId) as Pick<User, 'address' | 'phone'>
+    // 下單者一律取自 session，不採用 body 傳來的 userId（原本可冒用他人身分下單、並讀到對方地址電話）
+    const user = db.prepare('SELECT address, phone FROM users WHERE id = ?').get(session.id) as Pick<User, 'address' | 'phone'>
 
     const { lastInsertRowid } = db
       .prepare('INSERT INTO orders (user_id, total, address, phone, status, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-      .run(body.userId, body.total, user.address, user.phone, 'pending', new Date().toISOString())
+      .run(session.id, body.total, user.address, user.phone, 'pending', new Date().toISOString())
     const orderId = Number(lastInsertRowid)
 
     for (const item of body.items) {

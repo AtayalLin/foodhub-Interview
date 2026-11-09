@@ -6,7 +6,8 @@ export default defineEventHandler(async (event) => {
 
   const db = useDb()
   const id = Number(getRouterParam(event, 'id'))
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id) as Omit<Order, 'items'> | undefined
+  // 只能讀自己的訂單。別人的訂單一律回 404（而非 403），不透露「這個訂單編號存在」
+  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(id, session.id) as Omit<Order, 'items'> | undefined
   if (!order) {
     throw createError({ statusCode: 404, statusMessage: '找不到訂單' })
   }

@@ -22,7 +22,6 @@ export const useOrderStore = defineStore('order', {
         const res = await $fetch<PlaceOrderResponse>('/api/orders', {
           method: 'POST',
           body: {
-            userId: auth.user.id,
             items: cart.items.map(i => ({
               productId: i.productId,
               name: i.name,
