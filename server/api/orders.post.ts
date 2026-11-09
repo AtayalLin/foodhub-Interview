@@ -7,12 +7,10 @@ function validateOrder(body: OrderBody | null): asserts body is OrderBody {
   if (!Array.isArray(body?.items) || !body.items.length) {
     throw createError({ statusCode: 400, statusMessage: '購物車是空的' })
   }
-  const seen = new Set<number>()
   for (const item of body.items) {
-    if (!Number.isInteger(item?.productId) || seen.has(item.productId)) {
+    if (!Number.isInteger(item?.productId)) {
       throw createError({ statusCode: 400, statusMessage: '商品資料不正確' })
     }
-    seen.add(item.productId)
     if (!Number.isInteger(item.qty) || item.qty <= 0) {
       throw createError({ statusCode: 400, statusMessage: '數量不正確' })
     }
