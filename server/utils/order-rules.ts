@@ -4,14 +4,6 @@
 export const MAX_QTY_PER_ITEM = 20
 
 /**
- * 某商品實際可訂購的上限：取「全站上限」與「庫存」較小者。
- * 將來後台若為個別商品設定限購數，只需改這裡，所有 API 一起生效。
- */
-export function maxQtyFor(product: Pick<Product, 'stock'>) {
-  return Math.min(MAX_QTY_PER_ITEM, product.stock ?? Number.POSITIVE_INFINITY)
-}
-
-/**
  * 金額四捨五入到小數 2 位，避免浮點誤差（例如 12.9 + 4.5 = 17.400000000000002）。
  * 長期應改以整數最小單位（如「分」）搭配幣別儲存，見 CODE_REVIEW.md。
  */

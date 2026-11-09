@@ -109,7 +109,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // 訂單確定成立後才通知廚房。若廚房 API 失敗，實務上應以佇列重試或取消訂單並回補庫存（見 CODE_REVIEW.md）
-  await Promise.all(lines.map(({ item, product }) => notifyKitchen(product.id, item.qty)))
+  for (const { item, product } of lines) {
+    await notifyKitchen(product.id, item.qty)
+  }
 
   return { ok: true, orderId }
 })
