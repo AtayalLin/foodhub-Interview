@@ -55,14 +55,16 @@ test.describe('訪客購物車', () => {
     await expect(page.locator('.v-navigation-drawer')).toContainText('雙層培根堡套餐')
   })
 
-  test('購物車有商品時重新整理菜單頁，Console 沒有 hydration mismatch', async ({ page }) => {
+  test('購物車有商品時重新整理首頁與菜單頁，Console 沒有 hydration mismatch', async ({ page }) => {
     await page.goto('/restaurants/1/menu')
     await addButton(page, '經典起司堡套餐').click()
 
     const messages = collectHydrationMessages(page)
-    await page.reload()
-    await expect(productTitles(page).first()).toBeVisible()
-    await page.waitForLoadState('networkidle')
+    for (const path of ['/', '/restaurants', '/restaurants/1/menu']) {
+      await page.goto(path)
+      await page.waitForLoadState('networkidle')
+      await expect(cartBadge(page)).toHaveText('1') // 接手後購物車數字正確
+    }
     expect(messages).toEqual([])
   })
 
