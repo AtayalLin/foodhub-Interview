@@ -4,6 +4,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: '請先登入' })
   }
 
-  const row = useDb().prepare('SELECT items FROM carts WHERE user_id = ?').get(session.id) as { items: string } | undefined
-  return row ? (JSON.parse(row.items) as CartItem[]) : []
+  // 回傳前依資料庫目前的商品資料整理（價格可能已變動、商品可能已下架或賣完）
+  return normalizeCart(readCartEntries(session.id)).items
 })
