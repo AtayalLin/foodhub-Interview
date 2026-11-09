@@ -7,10 +7,11 @@ const { data: restaurant } = await useFetch<Restaurant>(`/api/restaurants/${id}`
 const tab = ref('order')
 const selected = ref<string>()
 
-const { data: menu, status, refresh } = await useFetch('/api/menu', {
-  query: { restaurantId: id, category: selected.value },
+// 傳入 ref 本身（而非 selected.value）：useFetch 會監看它，切換分類時自動以新的 category 重新請求。
+// 原本傳的是當下的值 undefined，之後 watch → refresh() 也一直用同一組參數，所以點分類商品不會換。
+const { data: menu, status } = await useFetch('/api/menu', {
+  query: { restaurantId: id, category: selected },
 })
-watch(selected, () => refresh())
 
 const activeCategory = computed(() => selected.value ?? menu.value?.categories[0])
 
