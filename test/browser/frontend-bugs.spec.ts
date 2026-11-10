@@ -74,6 +74,29 @@ test.describe('訪客購物車', () => {
   })
 })
 
+test.describe('訂單頁時間（server 為 UTC，與正式環境相同）', () => {
+  test.use({ timezoneId: 'Asia/Taipei' }) // 使用者在台灣；不受執行測試的電腦時區影響
+
+  test('SSR 與瀏覽器都顯示台灣時間，Console 沒有 hydration mismatch', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel('Email').fill('amy@foodhub.test')
+    await page.getByLabel('密碼').fill('password123')
+    await page.getByRole('button', { name: '登入' }).click()
+    await page.waitForURL('/')
+
+    // 訂單 #1 建立於 2026-10-20T12:30:00Z = 台灣時間 2026/10/20 下午8:30:00
+    const ssrHtml = await (await page.request.get('/orders/1')).text()
+    const ssrTime = ssrHtml.match(/\d{4}\/\d{1,2}\/\d{1,2}[^<·]*?\d{1,2}:\d{2}:\d{2}/)?.[0]
+    expect(ssrTime, 'SSR 輸出的 HTML 應為台灣時間').toBe('2026/10/20 下午8:30:00')
+
+    const messages = collectHydrationMessages(page)
+    await page.goto('/orders/1')
+    await expect(page.getByText('2026/10/20 下午8:30:00')).toBeVisible()
+    await page.waitForLoadState('networkidle')
+    expect(messages).toEqual([])
+  })
+})
+
 test.describe('結帳：價格已更新', () => {
   test('購物車價格與售價不同時，顯示提示、保留購物車並更新為目前售價', async ({ page }) => {
     // 模擬「加入購物車之後商品調價」：讓載入的購物車帶著舊價格 $10（攔截 GET /api/cart）

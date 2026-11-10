@@ -23,6 +23,7 @@ export default defineConfig({
     url: `http://127.0.0.1:${PORT}/api/restaurants`,
     timeout: 240_000,
     reuseExistingServer: false,
-    env: { PORT: String(PORT), HOST: '127.0.0.1' },
+    // TZ=UTC：模擬正式環境（Docker 容器預設 UTC），才測得出 server 與瀏覽器時區不同造成的問題
+    env: { PORT: String(PORT), HOST: '127.0.0.1', TZ: 'UTC' },
   },
 })
