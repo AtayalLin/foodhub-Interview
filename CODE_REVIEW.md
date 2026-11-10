@@ -5,7 +5,7 @@ FoodHub 上線前審查：發現的問題、修正內容、沒有修的項目與
 - **比對基準**：`4896717 chore: initial import`（未修改的原始專案）。下文所有「位置」的**行號都指原始檔案**。
 - **審查方式**：逐檔閱讀 → 以實際請求或瀏覽器重現 → 先寫**會失敗的測試**證明問題存在（`c53391c`、`583b533`）→ 修正 → 同一個測試轉為通過。
 - **修正原則**：依嚴重度排序；在既有架構內修改，不重寫；每個改動都要能對應到下表的某個問題。超出範圍的改動已另外 revert（見[範圍控制](#範圍控制)）。
-- **結果**：修正 17 項（嚴重 7、高 4、中 1、低 5）；1 項中等級問題（M2）在第二部分重新設計時解決；判斷不需修改 6 項；留到之後 9 項。含第二部分在內，Vitest 44/44、Playwright 12/12 通過，`vue-tsc` 型別檢查 0 錯誤。
+- **結果**：修正 18 項（嚴重 7、高 4、中 1、低 6）；1 項中等級問題（M2）在第二部分重新設計時解決；判斷不需修改 6 項；留到之後 9 項。含第二部分在內，Vitest 44/44、Playwright 13/13 通過，`vue-tsc` 型別檢查 0 錯誤。
 
 ## 嚴重度定義
 
@@ -40,6 +40,7 @@ FoodHub 上線前審查：發現的問題、修正內容、沒有修的項目與
 | L3 | 低 | 登入 API 收到空的 body 回 500 | `server/api/auth/login.post.ts:7` | ✅ `5f5b177` |
 | L4 | 低 | 登入 cookie 沒有 `Secure` | `server/api/auth/login.post.ts:19` | ✅ `5f5b177` |
 | L5 | 低 | 訂單金額浮點誤差（`17.400000000000002`） | `server/api/orders.post.ts:39`、`app/stores/order.ts:32` | ✅ `b56f098`（四捨五入；根本解見 D2） |
+| L6 | 低 | 訂單頁時間依執行環境格式化：正式環境 SSR 差 8 小時，且 hydration mismatch | `app/pages/orders/[id].vue:19` | ✅ `a5dcd47` |
 
 ---
 
@@ -222,6 +223,19 @@ FoodHub 上線前審查：發現的問題、修正內容、沒有修的項目與
 - **修正**：server 計算總額時四捨五入到小數 2 位（`roundMoney`）。根本解法見 D2。
 - **測試**：`orders.test.ts` › 訂單總額四捨五入
 
+### L6 訂單頁時間與 hydration｜低
+
+- **位置**：`app/pages/orders/[id].vue:19`（`new Date(order.created_at).toLocaleString('zh-TW')`）
+- **問題**：`toLocaleString` 的結果取決於執行環境的時區與語系資料，SSR（server）和瀏覽器不一定相同。
+- **後果**：
+  - 正式環境（Docker 容器為 UTC）：台灣時間 下午8:30 的訂單，SSR 輸出 `下午12:30:00`，hydration 時才改成正確時間，畫面上的時間會跳動 8 小時。
+  - 即使時區相同：Node 在日期與時間之間放的是細空格（U+2009），Chrome 是一般空格，Console 出現 `Hydration text mismatch`。
+- **重現**：以 Amy 登入，打開 `/orders/1`，Console 出現 `Hydration completed but contains mismatches.`；以 UTC 啟動 server（`docker compose up`）時，檢視原始碼看到的時間是 `下午12:30:00`。
+- **嚴重度理由**：資料正確，只影響顯示與體驗。
+- **修正**：新增 `app/utils/formatDateTime.ts`，只向 `Intl` 取 Asia/Taipei 的數字，字串自己組合；外觀維持原本的 `2026/10/20 下午8:30:00`。已比對 7 個邊界時間（午夜、中午、個位數日期、跨年）與原本的輸出一致，且 server 在台北、UTC、紐約、倫敦時區的結果完全相同。
+- **發現經過**：這一項是**手動測試時發現的**。原本的 hydration 測試只涵蓋首頁、找餐點、菜單頁，沒有包含訂單頁。
+- **測試**：`frontend-bugs.spec.ts` › 訂單頁時間。Playwright 的測試 server 改用 `TZ=UTC`（與正式環境相同），瀏覽器固定為 Asia/Taipei；修正前失敗（`b1f962d`，SSR 輸出 `下午12:30:00`），修正後通過。
+
 ---
 
 ## 沒有修的項目
@@ -295,6 +309,7 @@ README 的「交接備註」保留原文，由本文件說明；README 只更新
 | 第一次驗證 hydration 偵測時，只把 `state()` 改回舊寫法 | **無效的負向測試**：修正用的 plugin 還在，測試當然通過。改成在 Header 強制製造 server 與瀏覽器不一致的內容，才確認偵測有效（L2）。 |
 | h3 會濾掉中文錯誤訊息 | **不成立**（N5）。 |
 | 登入頁的 redirect 參數可能是 open redirect | **不成立**（N3）。 |
+| hydration 測試涵蓋首頁、找餐點、菜單頁就足夠 | **不足**。訂單頁的時間格式化在手動測試時才發現有 hydration mismatch，而且正式環境會差 8 小時（L6）。之後把測試 server 改為 UTC，與正式環境一致。 |
 
 ## 範圍控制
 
@@ -328,7 +343,7 @@ npx playwright show-report  # 失敗時的截圖與 trace
 | `test/e2e/orders.test.ts` | H2、H3、C6 的下單規則、L5 |
 | `test/unit/sanitize-intro.test.ts` | H1 白名單規則 |
 | `test/browser/current-user.spec.ts` | C7（瀏覽器端，兩位使用者同時存取） |
-| `test/browser/frontend-bugs.spec.ts` | M1、L1、H4、L2、C6 的前端提示 |
+| `test/browser/frontend-bugs.spec.ts` | M1、L1、H4、L2、L6、C6 的前端提示 |
 | `test/unit/cart-merge.test.ts`、`test/e2e/cart.test.ts`、`test/browser/cart-merge.spec.ts` | 第二部分：登入後合併購物車（見 `DESIGN.md` 第 7 節） |
 | `test/browser/smoke.spec.ts` | 測試環境本身 |
 
