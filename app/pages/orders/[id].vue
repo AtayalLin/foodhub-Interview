@@ -16,7 +16,7 @@ useSeoMeta({ title: () => `訂單 #${route.params.id} - FoodHub` })
   <v-card v-else-if="order" max-width="640" class="mx-auto" variant="outlined">
     <v-card-item>
       <v-card-title>訂單 #{{ order.id }}</v-card-title>
-      <v-card-subtitle>{{ new Date(order.created_at).toLocaleString('zh-TW') }} · {{ statusText[order.status] ?? order.status }}</v-card-subtitle>
+      <v-card-subtitle>{{ formatDateTime(order.created_at) }} · {{ statusText[order.status] ?? order.status }}</v-card-subtitle>
     </v-card-item>
     <v-card-text>
       <div class="mb-4">
